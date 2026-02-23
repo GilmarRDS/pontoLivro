@@ -8,13 +8,16 @@ __pycache__/
 # Virtual environment
 .venv/
 venv/
+\.venv
 
 # Environment/config secrets
 .env
 .env.*
 credentials.json
-.streamlit/secrets.toml
 
+.secrets.toml
+secrets.toml
+/secrets.toml
 # Local data/artifacts
 uploads/
 generated/
