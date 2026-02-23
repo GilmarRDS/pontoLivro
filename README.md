@@ -38,6 +38,12 @@ Se o PowerShell bloquear scripts, rode antes:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
+Se aparecer `RequestsDependencyWarning` ao executar o app, atualize as dependências do ambiente virtual:
+
+```bash
+pip install --upgrade -r requirements.txt
+```
+
 
 ## Configuração (Google Sheets)
 
