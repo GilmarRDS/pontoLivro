@@ -16,11 +16,28 @@ Aplicação web em Flask para:
 
 ## Instalação
 
+### Linux / macOS
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Se o PowerShell bloquear scripts, rode antes:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
 
 ## Configuração (Google Sheets)
 
@@ -81,8 +98,16 @@ universe_domain = "googleapis.com"
 
 ## Execução
 
+### Linux / macOS
+
 ```bash
 python app.py
+```
+
+### Windows (PowerShell)
+
+```powershell
+python .\app.py
 ```
 
 Acesse: `http://localhost:5000`
