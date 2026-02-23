@@ -22,12 +22,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Configuração do Google Sheets
+## Configuração (Google Sheets)
 
-1. Crie uma planilha no Google Sheets e copie o ID da URL.
-2. Crie uma service account no Google Cloud e baixe o arquivo `credentials.json`.
-3. Compartilhe a planilha com o e-mail da service account (permissão de editor).
-4. Configure as variáveis de ambiente:
+Você pode configurar de duas formas:
+
+### 1) Variáveis de ambiente (local/servidor)
 
 ```bash
 export GOOGLE_SHEETS_SPREADSHEET_ID="SEU_ID_DA_PLANILHA"
@@ -35,6 +34,30 @@ export GOOGLE_SHEETS_CREDENTIALS_FILE="credentials.json"
 # opcional
 export GOOGLE_SHEETS_WORKSHEET="profissionais"
 ```
+
+### 2) Streamlit Cloud - Secrets (TOML)
+
+No painel **Secrets**, use algo como:
+
+```toml
+GOOGLE_SHEETS_SPREADSHEET_ID = "SEU_ID_DA_PLANILHA"
+GOOGLE_SHEETS_WORKSHEET = "profissionais"
+
+[google]
+type = "service_account"
+project_id = "seu-projeto"
+private_key_id = "..."
+private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+client_email = "...@...iam.gserviceaccount.com"
+client_id = "..."
+auth_uri = "https://accounts.google.com/o/oauth2/auth"
+token_uri = "https://oauth2.googleapis.com/token"
+auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+client_x509_cert_url = "..."
+universe_domain = "googleapis.com"
+```
+
+> O app lê automaticamente `.streamlit/secrets.toml` (ou caminho definido em `STREAMLIT_SECRETS_PATH`).
 
 ## Execução
 

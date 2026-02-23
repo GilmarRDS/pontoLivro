@@ -18,8 +18,7 @@
         <h2>Configuração do Google Sheets</h2>
         <p><strong>Erro atual:</strong> {{ sheets_error }}</p>
         <p>
-          Configure as variáveis <code>GOOGLE_SHEETS_SPREADSHEET_ID</code> e
-          <code>GOOGLE_SHEETS_CREDENTIALS_FILE</code> para habilitar o cadastro.
+          No Streamlit Cloud, configure em <strong>Secrets (TOML)</strong> o <code>GOOGLE_SHEETS_SPREADSHEET_ID</code> e a seção <code>[google]</code> com as credenciais da service account. Também funciona por variáveis de ambiente.
         </p>
       </section>
       {% endif %}

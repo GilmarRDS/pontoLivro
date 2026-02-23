@@ -12,6 +12,11 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 try:
+    import tomllib
+except ModuleNotFoundError:  # Python < 3.11
+    import tomli as tomllib
+
+try:
     import gspread
     from google.oauth2.service_account import Credentials
 except ModuleNotFoundError:
@@ -30,33 +35,100 @@ SHEETS_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
-SHEETS_CREDENTIALS_FILE = os.getenv("GOOGLE_SHEETS_CREDENTIALS_FILE", "credentials.json")
-SHEETS_SPREADSHEET_ID = os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID", "")
-SHEETS_WORKSHEET = os.getenv("GOOGLE_SHEETS_WORKSHEET", "profissionais")
 SHEETS_HEADERS = ["id", "nome", "cargo", "aulas", "pl", "created_at"]
 
 
-def get_worksheet():
+def load_streamlit_secrets():
+    """Carrega secrets do formato TOML usado pelo Streamlit Cloud.
+
+    Prioriza `STREAMLIT_SECRETS_PATH`; fallback para `.streamlit/secrets.toml`.
+    """
+    if tomllib is None:
+        return {}
+
+    secrets_path = os.getenv("STREAMLIT_SECRETS_PATH", ".streamlit/secrets.toml")
+    secrets_file = Path(secrets_path)
+    if not secrets_file.exists():
+        return {}
+
+    try:
+        with secrets_file.open("rb") as f:
+            data = tomllib.load(f)
+        if isinstance(data, dict):
+            return data
+        return {}
+    except Exception:
+        return {}
+
+
+def get_settings():
+    """Lê configuração de env vars com fallback para secrets TOML do Streamlit."""
+    secrets = load_streamlit_secrets()
+    google_section = secrets.get("google", {}) if isinstance(secrets.get("google", {}), dict) else {}
+
+    spreadsheet_id = os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID") or secrets.get(
+        "GOOGLE_SHEETS_SPREADSHEET_ID", ""
+    )
+    worksheet = (
+        os.getenv("GOOGLE_SHEETS_WORKSHEET")
+        or secrets.get("GOOGLE_SHEETS_WORKSHEET")
+        or "profissionais"
+    )
+    credentials_file = (
+        os.getenv("GOOGLE_SHEETS_CREDENTIALS_FILE")
+        or secrets.get("GOOGLE_SHEETS_CREDENTIALS_FILE")
+        or "credentials.json"
+    )
+
+    credentials_info = secrets.get("GOOGLE_SERVICE_ACCOUNT", None)
+    if not isinstance(credentials_info, dict):
+        credentials_info = google_section if google_section else None
+
+    return {
+        "spreadsheet_id": spreadsheet_id,
+        "worksheet": worksheet,
+        "credentials_file": credentials_file,
+        "credentials_info": credentials_info,
+    }
+
+
+def build_google_credentials():
+    settings = get_settings()
+
+    if not settings["spreadsheet_id"]:
+        raise RuntimeError(
+            "Defina GOOGLE_SHEETS_SPREADSHEET_ID (env) ou no secrets TOML do Streamlit."
+        )
+
     if gspread is None or Credentials is None:
         raise RuntimeError("Dependências do Google Sheets não instaladas.")
 
-    if not SHEETS_SPREADSHEET_ID:
-        raise RuntimeError("Defina GOOGLE_SHEETS_SPREADSHEET_ID nas variáveis de ambiente.")
+    if settings["credentials_info"]:
+        creds = Credentials.from_service_account_info(
+            settings["credentials_info"], scopes=SHEETS_SCOPES
+        )
+        return creds, settings
 
-    credentials_path = Path(SHEETS_CREDENTIALS_FILE)
+    credentials_path = Path(settings["credentials_file"])
     if not credentials_path.exists():
         raise RuntimeError(
-            f"Arquivo de credenciais não encontrado: {SHEETS_CREDENTIALS_FILE}."
+            "Credenciais não encontradas. Use GOOGLE_SHEETS_CREDENTIALS_FILE ou defina "
+            "[google] no Streamlit secrets."
         )
 
     creds = Credentials.from_service_account_file(str(credentials_path), scopes=SHEETS_SCOPES)
+    return creds, settings
+
+
+def get_worksheet():
+    creds, settings = build_google_credentials()
     client = gspread.authorize(creds)
-    spreadsheet = client.open_by_key(SHEETS_SPREADSHEET_ID)
+    spreadsheet = client.open_by_key(settings["spreadsheet_id"])
 
     try:
-        worksheet = spreadsheet.worksheet(SHEETS_WORKSHEET)
+        worksheet = spreadsheet.worksheet(settings["worksheet"])
     except gspread.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(title=SHEETS_WORKSHEET, rows=1000, cols=10)
+        worksheet = spreadsheet.add_worksheet(title=settings["worksheet"], rows=1000, cols=10)
 
     first_row = worksheet.row_values(1)
     if first_row != SHEETS_HEADERS:
