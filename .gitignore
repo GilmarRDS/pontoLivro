@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment/config secrets
+.env
+.env.*
+credentials.json
+.streamlit/secrets.toml
+
+# Local data/artifacts
+uploads/
+generated/
+*.db
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
