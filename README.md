@@ -38,6 +38,35 @@ Se o PowerShell bloquear scripts, rode antes:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
+Se aparecer `RequestsDependencyWarning` ao executar o app, atualize as dependências do ambiente virtual:
+
+```bash
+pip install --upgrade -r requirements.txt
+```
+
+Se ainda persistir, no **Windows/PowerShell** faça uma limpeza completa do ambiente virtual:
+
+```powershell
+# 1) sair do venv atual (se estiver ativo)
+deactivate
+
+# 2) apagar o ambiente antigo
+Remove-Item -Recurse -Force .venv
+
+# 3) recriar e ativar
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# 4) atualizar ferramentas de instalação
+python -m pip install --upgrade pip setuptools wheel
+
+# 5) reinstalar dependências do projeto
+pip install --upgrade -r requirements.txt
+
+# 6) validar versões principais
+python -c "import requests,urllib3,charset_normalizer; print('requests', requests.__version__); print('urllib3', urllib3.__version__); print('charset_normalizer', charset_normalizer.__version__)"
+```
+
 
 ## Configuração (Google Sheets)
 
