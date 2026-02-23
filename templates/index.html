@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Inteligente de Livro de Ponto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Sistema Inteligente de Livro de Ponto</h1>
+      <p class="subtitle">
+        Cadastre profissionais no Google Sheets, suba um calendário em PDF e gere automaticamente um livro de ponto pronto para impressão.
+      </p>
+
+      {% if not sheets_ok %}
+      <section class="card error-box">
+        <h2>Configuração do Google Sheets</h2>
+        <p><strong>Erro atual:</strong> {{ sheets_error }}</p>
+        <p>
+          Configure as variáveis <code>GOOGLE_SHEETS_SPREADSHEET_ID</code> e
+          <code>GOOGLE_SHEETS_CREDENTIALS_FILE</code> para habilitar o cadastro.
+        </p>
+      </section>
+      {% endif %}
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <section>
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </section>
+      {% endif %}
+      {% endwith %}
+
+      <section class="card">
+        <h2>Cadastro de profissional</h2>
+        <form method="POST" action="{{ url_for('create_professional') }}" id="professional-form">
+          <label>
+            Nome
+            <input type="text" name="nome" required />
+          </label>
+
+          <label>
+            Cargo
+            <select name="cargo" id="cargo" required>
+              <option value="">Selecione</option>
+              <option value="Professor">Professor</option>
+              <option value="Coordenador">Coordenador</option>
+              <option value="Secretário">Secretário</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+
+          <div id="professor-fields" class="hidden">
+            <label>
+              Aulas
+              <input type="text" name="aulas" placeholder="Ex: Matemática 6ºA / 7ºB" />
+            </label>
+            <label>
+              PL
+              <input type="text" name="pl" placeholder="Ex: Planejamento às sextas 13h" />
+            </label>
+          </div>
+
+          <button type="submit" {% if not sheets_ok %}disabled{% endif %}>Cadastrar profissional</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Gerar livro de ponto</h2>
+        <form method="POST" action="{{ url_for('generate_book') }}" enctype="multipart/form-data">
+          <label>
+            Profissional
+            <select name="professional_id" required>
+              <option value="">Selecione um profissional</option>
+              {% for p in professionals %}
+              <option value="{{ p.id }}">{{ p.nome }} - {{ p.cargo }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label>
+            Calendário (PDF)
+            <input type="file" name="calendar_pdf" accept="application/pdf" required />
+          </label>
+
+          <button type="submit" {% if not sheets_ok %}disabled{% endif %}>Gerar PDF do livro de ponto</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Profissionais cadastrados</h2>
+        {% if professionals %}
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Cargo</th>
+              <th>Aulas</th>
+              <th>PL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in professionals %}
+            <tr>
+              <td>{{ p.nome }}</td>
+              <td>{{ p.cargo }}</td>
+              <td>{{ p.aulas or '-' }}</td>
+              <td>{{ p.pl or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum profissional cadastrado ainda.</p>
+        {% endif %}
+      </section>
+    </main>
+
+    <script>
+      const cargoSelect = document.getElementById('cargo');
+      const professorFields = document.getElementById('professor-fields');
+
+      cargoSelect.addEventListener('change', () => {
+        const isProfessor = cargoSelect.value.toLowerCase() === 'professor';
+        professorFields.classList.toggle('hidden', !isProfessor);
+      });
+    </script>
+  </body>
+</html>
