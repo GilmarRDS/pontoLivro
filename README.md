@@ -16,11 +16,28 @@ Aplicação web em Flask para:
 
 ## Instalação
 
+### Linux / macOS
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Se o PowerShell bloquear scripts, rode antes:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
 
 ## Configuração (Google Sheets)
 
@@ -58,11 +75,39 @@ universe_domain = "googleapis.com"
 ```
 
 > O app lê automaticamente `.streamlit/secrets.toml` (ou caminho definido em `STREAMLIT_SECRETS_PATH`).
+> Existe um template seguro em `.streamlit/secrets.toml.example` para facilitar os testes.
+
+
+### Como criar o secret no Google Cloud (passo a passo)
+
+1. Acesse o **Google Cloud Console** e selecione/crie um projeto.
+2. Ative as APIs:
+   - **Google Sheets API**
+   - **Google Drive API**
+3. Vá em **IAM e administrador > Contas de serviço**.
+4. Crie uma conta de serviço (ex: `ponto-livro-bot`).
+5. Em **Chaves** da conta de serviço, clique em **Adicionar chave > Criar nova chave > JSON**.
+6. Baixe o arquivo JSON (ele contém os dados do bloco `[google]`).
+7. Abra sua planilha do Google Sheets e compartilhe com o `client_email` da conta de serviço (permissão **Editor**).
+8. Para usar no Streamlit Cloud:
+   - abra o JSON baixado;
+   - copie os campos para o bloco `[google]` no Secrets;
+   - configure também `GOOGLE_SHEETS_SPREADSHEET_ID` com o ID da URL da planilha.
+
+> Dica de segurança: não suba o JSON no Git. Use sempre Secrets/variáveis de ambiente.
 
 ## Execução
 
+### Linux / macOS
+
 ```bash
 python app.py
+```
+
+### Windows (PowerShell)
+
+```powershell
+python .\app.py
 ```
 
 Acesse: `http://localhost:5000`
